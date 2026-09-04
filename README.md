@@ -1,95 +1,71 @@
 # Claude Status
 
-A tiny macOS menu bar app that shows the status of Claude services as colored bars.
+**Is Claude down?** Know at a glance, right from your Mac's menu bar.
+
+Claude Status puts one small colored bar per Claude service next to your clock:
 
 ```
-| | | | |      one bar per service, green / yellow / orange / red
+ ▍▍▍▍▍     green = all good · yellow = degraded · orange = partial outage · red = major outage
 ```
 
-- **One bar per service** (claude.ai, Console, API, Claude Code, Cowork, Claude for Government). Uncheck the ones you don't care about, e.g. keep only Claude Code.
-- **Click the bars** to open a popover with the active incidents (with every update), each service's status, its 90-day uptime, and settings.
-- **No account, no API key**: everything comes from the public Statuspage API and page of [status.claude.com](https://status.claude.com), polled every 60 s.
+Click it and you get the full picture: what's broken, what Anthropic is saying about it, and how each service has been doing over the last 90 days.
+
+## Why
+
+When Claude starts erroring, the first question is always "is it me or is it them?". Instead of opening [status.claude.com](https://status.claude.com) every time, the answer is already in your menu bar, and you notice an incident the moment a bar changes color.
+
+## Features
+
+- **One bar per service**: claude.ai, Claude Console, Claude API, Claude Code, Claude Cowork, Claude for Government.
+- **Pick what you care about**: only use Claude Code? Uncheck the rest and keep a single bar.
+- **Incident details**: every active incident with its full timeline (investigating → identified → monitoring → resolved), exactly as posted by Anthropic, plus a link to the incident page.
+- **90-day history**: a mini uptime graph and the uptime percentage for each service.
+- **Refreshes every minute**: uses the same public status feed as the status page. No account, no API key, nothing to configure.
+- **Lightweight**: a native Swift app, no Dock icon, no window, no dependencies. Optional launch at login.
+- **Free and open source**: MIT licensed.
 
 ## Install
 
-Download the latest `claude-status-x.y.zip` from the [Releases](../../releases) page, unzip, and drag `claude-status.app` to `/Applications`.
+1. Download the latest `claude-status-x.y.zip` from the [Releases](../../releases) page.
+2. Unzip it and drag `claude-status.app` into your `Applications` folder.
+3. Open it. The bars appear in the menu bar.
 
-The builds are ad-hoc signed (no Apple Developer ID), so the first launch is blocked by Gatekeeper: right-click the app → **Open** → **Open**, once. Or from a terminal:
+**First launch:** the app isn't signed with an Apple Developer certificate yet, so macOS will refuse to open it the first time. Right-click the app → **Open** → **Open**. You only have to do this once. Or, from a terminal:
 
 ```bash
 xattr -d com.apple.quarantine /Applications/claude-status.app
 ```
 
-Requires macOS 14 or later.
+Requires macOS 14 Sonoma or later.
 
-## Build
+## Using it
 
-Requires Xcode 26 or later. The deployment target is macOS 14.
-
-```bash
-xcodebuild -project claude-status.xcodeproj -scheme claude-status -configuration Release build
-```
-
-Or open `claude-status.xcodeproj` in Xcode and hit Run. The app is a menu bar agent (no Dock icon, no window).
-
-## Architecture (MVVM)
-
-The app follows Model-View-ViewModel with a thin service layer. Views never talk to the network or to `UserDefaults`; view models never draw.
-
-```
-claude-status/
-├── App/            ClaudeStatusApp, AppDelegate  — composition root, builds and wires everything
-├── Models/         ServiceStatus, ServiceComponent, Incident, StatusSnapshot, ConnectionState
-│                   plain Codable value types + business rules (severity, isActive, activeIncidents)
-├── Services/       StatuspageClient (HTTP + uptime HTML parsing)
-│                   StatusSource protocol → PollingStatusSource (AsyncStream)
-│                   PreferencesStore (UserDefaults), LaunchAtLoginService (SMAppService)
-├── ViewModels/     StatusViewModel   — state of truth: snapshot, connection, settings, actions
-│                   MenuBarViewModel  — bar colors + tooltip for the status item
-│                   IncidentViewModel, ComponentRowViewModel — display-ready rows
-│                   StatusPresentation — colors and labels for domain values
-├── Views/          PopoverView, IncidentView, ComponentRowView, SettingsView (SwiftUI)
-│                   MenuBar/StatusBarController (NSStatusItem + NSPopover), BarsRenderer
-└── Support/        ISODate
-```
-
-Data flow: a `StatusSource` emits `StatusSourceEvent`s (snapshot / connection / failure) on an `AsyncStream`; `StatusViewModel` consumes them and publishes state with `@Published`; SwiftUI views observe it with `@ObservedObject`, and `StatusBarController` observes `MenuBarViewModel` through Combine. Dependencies are injected through protocols (`StatuspageClientProtocol`, `StatusSource`, `PreferencesStore`, `LaunchAtLoginService`) so view models can be tested with fakes.
-
-## Release
-
-```bash
-scripts/release.sh                       # ad-hoc signed → dist/claude-status-<version>.zip
-gh release create v1.0 dist/claude-status-1.0.zip --title "v1.0" --generate-notes
-```
-
-With a paid Apple Developer account you can sign with a Developer ID and notarize, so users don't get the Gatekeeper prompt:
-
-```bash
-SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/release.sh
-xcrun notarytool submit dist/claude-status-1.0.zip --keychain-profile notary --wait
-xcrun stapler staple build/Build/Products/Release/claude-status.app
-```
-
-Bump `MARKETING_VERSION` in the Xcode project before each release.
+- **Click the bars** to open the panel. Click anywhere else to close it.
+- **Hover the bars** for a quick text summary of every service.
+- **Checkboxes** next to each service choose which ones get a bar in the menu bar.
+- **Gear icon** opens the settings (launch at login).
+- **Compass icon** opens status.claude.com in your browser.
+- **Refresh icon** forces an update right away.
 
 ## Colors
 
-| Status | Color |
+| Bar | Meaning |
 | --- | --- |
-| Operational | green |
-| Degraded performance | yellow |
-| Partial outage | orange |
-| Major outage | red |
-| Under maintenance | blue |
-| Unknown / unreachable | gray |
+| 🟢 green | Operational |
+| 🟡 yellow | Degraded performance |
+| 🟠 orange | Partial outage |
+| 🔴 red | Major outage |
+| 🔵 blue | Under maintenance |
+| ⚪ gray | Status unknown or status page unreachable |
 
-## Development
+## Privacy
 
-```bash
-# open the popover automatically 1.5 s after launch (handy for screenshots)
-./build/claude-status.app/Contents/MacOS/claude-status --open-popover
-```
+The app only talks to `status.claude.com`, the public status page. It sends nothing about you, stores nothing but your service selection, and has no analytics.
+
+## Contributing
+
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build the app and how the code is organized.
 
 ## License
 
-MIT
+[MIT](LICENSE)
