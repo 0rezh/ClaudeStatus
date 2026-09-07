@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds, signs, notarizes and (optionally) publishes a release.
 #
-#   scripts/release.sh                  build + notarize → dist/claude-status-<version>.zip
+#   scripts/release.sh                  build + notarize → dist/ClaudeStatus-<version>.zip
 #   scripts/release.sh 1.1              same, after bumping MARKETING_VERSION to 1.1 and committing
 #   scripts/release.sh 1.1 --publish    ... then tag v1.1, push, and create the GitHub release
 #
@@ -15,6 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SCHEME=claude-status
+PRODUCT=ClaudeStatus
 PROJECT=claude-status.xcodeproj
 BUILD_DIR=build
 DIST_DIR=dist
@@ -79,16 +80,16 @@ else
 fi
 
 # --- build -------------------------------------------------------------------
-log "Building $SCHEME $VERSION (${SIGN_IDENTITY:-ad-hoc})"
+log "Building $PRODUCT $VERSION (${SIGN_IDENTITY:-ad-hoc})"
 rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
   -destination 'generic/platform=macOS' -derivedDataPath "$BUILD_DIR" "${SIGN_ARGS[@]}" build \
   2>&1 | grep -E 'error:|warning: .*\.swift|BUILD' || true
 
-APP="$BUILD_DIR/Build/Products/Release/$SCHEME.app"
+APP="$BUILD_DIR/Build/Products/Release/$PRODUCT.app"
 [[ -d "$APP" ]] || die "build failed: $APP not found"
-ZIP="$DIST_DIR/$SCHEME-$VERSION.zip"
+ZIP="$DIST_DIR/$PRODUCT-$VERSION.zip"
 zip_app() { rm -f "$ZIP"; ditto -c -k --keepParent "$APP" "$ZIP"; }
 zip_app
 
@@ -108,7 +109,7 @@ fi
 
 # --- verify ------------------------------------------------------------------
 log "Verifying"
-lipo -info "$APP/Contents/MacOS/$SCHEME" | sed 's/.*are: /architectures: /'
+lipo -info "$APP/Contents/MacOS/$PRODUCT" | sed 's/.*are: /architectures: /'
 codesign --verify --deep --strict "$APP"
 if [[ $NOTARIZE -eq 1 ]]; then
   spctl -a -vv -t exec "$APP" 2>&1 | grep -q 'Notarized Developer ID' || die "Gatekeeper does not accept the app"

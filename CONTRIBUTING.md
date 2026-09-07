@@ -35,13 +35,13 @@ Data flow: a `StatusSource` emits `StatusSourceEvent`s (snapshot / connection / 
 
 ```bash
 # open the popover automatically 1.5 s after launch (handy for screenshots)
-./build/claude-status.app/Contents/MacOS/claude-status --open-popover
+./build/Build/Products/Release/ClaudeStatus.app/Contents/MacOS/ClaudeStatus --open-popover
 ```
 
 ## Release
 
 ```bash
-scripts/release.sh                  # build, sign, notarize → dist/claude-status-<version>.zip
+scripts/release.sh                  # build, sign, notarize → dist/ClaudeStatus-<version>.zip
 scripts/release.sh 1.1              # same, after bumping MARKETING_VERSION to 1.1 and committing
 scripts/release.sh 1.1 --publish    # ... then tag v1.1, push, and create the GitHub release
 ```

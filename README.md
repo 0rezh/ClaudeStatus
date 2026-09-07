@@ -26,8 +26,8 @@ When Claude starts erroring, the first question is always "is it me or is it the
 
 ## Install
 
-1. Download the latest `claude-status-x.y.zip` from the [Releases](../../releases) page.
-2. Unzip it and drag `claude-status.app` into your `Applications` folder.
+1. Download the latest `ClaudeStatus-x.y.zip` from the [Releases](../../releases) page.
+2. Unzip it and drag `ClaudeStatus.app` into your `Applications` folder.
 3. Open it. The bars appear in the menu bar.
 
 The app is signed with a Developer ID certificate and notarized by Apple, so it opens without any Gatekeeper warning. It is a universal binary and runs natively on Apple Silicon and Intel Macs.
