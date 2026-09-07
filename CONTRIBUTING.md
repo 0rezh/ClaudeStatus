@@ -41,24 +41,24 @@ Data flow: a `StatusSource` emits `StatusSourceEvent`s (snapshot / connection / 
 ## Release
 
 ```bash
-scripts/release.sh                       # ad-hoc signed → dist/claude-status-<version>.zip
-gh release create v1.0 dist/claude-status-1.0.zip --title "v1.0" --generate-notes
+scripts/release.sh                  # build, sign, notarize → dist/claude-status-<version>.zip
+scripts/release.sh 1.1              # same, after bumping MARKETING_VERSION to 1.1 and committing
+scripts/release.sh 1.1 --publish    # ... then tag v1.1, push, and create the GitHub release
 ```
 
-With a paid Apple Developer account you can sign with a Developer ID and notarize, so users don't get the Gatekeeper prompt:
+The script builds a universal (Apple Silicon + Intel) Release app. If a "Developer ID Application"
+identity is in the keychain it signs with it (hardened runtime, no `get-task-allow`), notarizes the zip,
+staples the ticket and checks the result with Gatekeeper. Without one, the app is ad-hoc signed and
+users must right-click > Open the first time.
+
+One-time setup for notarization, with an app-specific password from appleid.apple.com:
 
 ```bash
-SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/release.sh
-xcrun notarytool submit dist/claude-status-1.0.zip --keychain-profile notary --wait
-xcrun stapler staple build/Build/Products/Release/claude-status.app
-# stapling modifies the .app, so rebuild the zip before uploading it
-ditto -c -k --keepParent build/Build/Products/Release/claude-status.app dist/claude-status-1.0.zip
-spctl -a -vv -t exec build/Build/Products/Release/claude-status.app   # expect "Notarized Developer ID"
+xcrun notarytool store-credentials notary --apple-id <email> --team-id <TEAMID>
 ```
 
-The `notary` keychain profile is created once with `xcrun notarytool store-credentials notary --apple-id <email> --team-id <TEAMID>` and an app-specific password.
-
-Bump `MARKETING_VERSION` in the Xcode project before each release.
+`--publish` requires a clean working tree, a logged-in `gh`, and no existing tag for that version.
+To redo a release, delete it first: `gh release delete v1.1 --cleanup-tag`.
 
 ## Commits
 
