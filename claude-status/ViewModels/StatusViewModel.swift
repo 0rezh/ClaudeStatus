@@ -41,6 +41,7 @@ final class StatusViewModel: ObservableObject {
 
     func start() {
         guard runner == nil else { return }
+        let source = source
         runner = Task { [weak self] in
             for await event in source.events() {
                 guard let self, !Task.isCancelled else { return }

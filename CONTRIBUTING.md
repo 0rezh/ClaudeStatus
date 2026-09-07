@@ -51,7 +51,12 @@ With a paid Apple Developer account you can sign with a Developer ID and notariz
 SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/release.sh
 xcrun notarytool submit dist/claude-status-1.0.zip --keychain-profile notary --wait
 xcrun stapler staple build/Build/Products/Release/claude-status.app
+# stapling modifies the .app, so rebuild the zip before uploading it
+ditto -c -k --keepParent build/Build/Products/Release/claude-status.app dist/claude-status-1.0.zip
+spctl -a -vv -t exec build/Build/Products/Release/claude-status.app   # expect "Notarized Developer ID"
 ```
+
+The `notary` keychain profile is created once with `xcrun notarytool store-credentials notary --apple-id <email> --team-id <TEAMID>` and an app-specific password.
 
 Bump `MARKETING_VERSION` in the Xcode project before each release.
 

@@ -16,13 +16,13 @@ rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
-  SIGN_ARGS=(CODE_SIGN_IDENTITY="$SIGN_IDENTITY" CODE_SIGN_STYLE=Manual OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime")
+  SIGN_ARGS=(CODE_SIGN_IDENTITY="$SIGN_IDENTITY" CODE_SIGN_STYLE=Manual OTHER_CODE_SIGN_FLAGS="--timestamp" ENABLE_HARDENED_RUNTIME=YES CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO)
 else
   SIGN_ARGS=(CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=)
 fi
 
 xcodebuild -project claude-status.xcodeproj -scheme "$SCHEME" -configuration Release \
-  -destination 'platform=macOS' -derivedDataPath "$BUILD_DIR" "${SIGN_ARGS[@]}" build | grep -E 'error:|warning: .*\.swift|BUILD' || true
+  -destination 'generic/platform=macOS' -derivedDataPath "$BUILD_DIR" "${SIGN_ARGS[@]}" build | grep -E 'error:|warning: .*\.swift|BUILD' || true
 
 APP="$BUILD_DIR/Build/Products/Release/$SCHEME.app"
 [[ -d "$APP" ]] || { echo "build failed: $APP not found"; exit 1; }
