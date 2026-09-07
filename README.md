@@ -30,11 +30,7 @@ When Claude starts erroring, the first question is always "is it me or is it the
 2. Unzip it and drag `claude-status.app` into your `Applications` folder.
 3. Open it. The bars appear in the menu bar.
 
-**First launch:** the app isn't signed with an Apple Developer certificate yet, so macOS will refuse to open it the first time. Right-click the app → **Open** → **Open**. You only have to do this once. Or, from a terminal:
-
-```bash
-xattr -d com.apple.quarantine /Applications/claude-status.app
-```
+The app is signed with a Developer ID certificate and notarized by Apple, so it opens without any Gatekeeper warning. It is a universal binary and runs natively on Apple Silicon and Intel Macs.
 
 Requires macOS 14 Sonoma or later.
 
